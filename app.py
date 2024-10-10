@@ -66,8 +66,8 @@ def moveThymio(id, left, right):
     print(robot)
     aw(robot.lock())
     v = {
-        "motor.left.target": [+50],
-        "motor.right.target": [-50],
+        "motor.left.target": [left],
+        "motor.right.target": [right],
     }
     aw(robot.set_variables(v))
     aw(robot.unlock())

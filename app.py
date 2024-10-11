@@ -9,17 +9,29 @@ app = Flask(__name__)
 client = ClientAsync()
 
 # make variable robot global
+robots_json = ''
 robots = []
 
 async def setupThymios():
     await notebook.start()
     global robots
     robots = await notebook.get_nodes()
+
+    global robots_json
+    robots_json = [{"id": i, "robot_id": str(robot).replace("Node ", "")} for i, robot in enumerate(robots)]
+    with open('robots_info.json', 'w') as f:
+        json.dump(robots_json, f)
+        
+    for i, robot in enumerate(robots):
+        robot_id = str(robot).replace("Node ", "")
+        print(f"Robot {i}: {robot_id}")
+
     print(robots)
 
 @app.route("/control")
 def control():
-    return 'These are thymios on the network: ' + str(robots)
+    global robots_json
+    return render_template('control.html', thymios=str(robots_json))
 
 @app.route("/setup")
 def setuo():
@@ -31,6 +43,15 @@ def index():
     # Run setupThymios in an event loop
     return render_template('index.html')
 
+@app.route("/thymio-form")
+def thymioForm():
+    thymio_id = request.args.get('id')
+    left_motor = request.args.get('l')
+    right_motor = request.args.get('r')
+    print(f"ID: {thymio_id},  L: {left_motor}, R: {right_motor}")
+    moveThymio(int(thymio_id), int(left_motor), int(right_motor))
+    
+    return redirect("/control")
 
 @app.get('/thymio')
 def getThymioParams():

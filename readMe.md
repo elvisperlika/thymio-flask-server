@@ -3,7 +3,7 @@
 Flask server that receive event from the Orchestrator (you can call it "leader") and control [Thymio Robots](https://www.thymio.org/). 
 
 You can use this server with real Thymio II Robots and with the Simulator that you can launch by Thymio Suite. 
-No need to setup the network, ```tdmclient``` do it fo you.
+No need to setup the network, ```tdmclient``` and Thymio Suite do it for you.
 
 ## Start the server
 
@@ -15,18 +15,22 @@ I choose the port 52000 for my server but you can change it in the code. By defa
 
 It's relvent to use ```ipython``` because the ```tdmclient.notebook``` work only with that interpreter.
 
-## Connect with Thymios and control a Thymio
+## Control Thymios
 
-1. Connect all Thymios you need in you network.
+1. Open ThymioSuite and plug in the dongles for all thymios you want to use.
 2. Open your browser in ```localhost:port```.
-3. Press the button **CONNECT**, you will redirect to the 'control' page (the server will create a json with id and thymio-id).
-4. Send a command to the Thymio setting id, left power motor and right motor power
+3. Yuo will redirect to the control from and you can send manualy commands to a Thymio.
+4. Send a command to the Thymio setting physical id, left power motor and right motor power
 
-## Send command manually
+## API
 
-Paste a string like this after the root, the is must be the robot's physical id:
+Control a thymio from your project using this GET method in your application:
+
 ```
 /thymio?json={"id":"44cdb758-cffc-42f3-ad5e-02262a80fcfc","l":-50,"r":+50}
 ```
-or use it as API from your application.
+- id: physical id
+- l: left power motor
+- r: right power motor
+
 

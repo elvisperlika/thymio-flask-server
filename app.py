@@ -8,57 +8,29 @@ app = Flask(__name__)
 
 client = ClientAsync()
 
-# make variable robot global
-robots_json = ''
-robots = []
 robotsMap = {}
-
-# create a map of the robots physical id and the id of the robot
 
 async def setupThymios():
     await notebook.start()
-    global robots
     robots = await notebook.get_nodes()
-
-    # global robots_json
-    # robots_json = [{"physical_id": i, "id": str(robot).replace("Node ", "")} for i, robot in enumerate(robots)]
-    # with open('robots_info.json', 'w') as f:
-    #     json.dump(robots_json, f)
-    
     global robotsMap
     for i, robot in enumerate(robots):
         physical_id = str(robot).replace("Node ", "")
         print(f"Robot {i}: {physical_id}")
-        robotsMap[physical_id] = i
-    print(robotsMap.keys())
-    print(robotsMap.values())
-
-
-
-@app.route("/control")
-def control():
-    global robots_json
-    return render_template('control.html', thymios=str(robots_json))
-
-@app.route("/setup")
-def setuo():
-    asyncio.run(setupThymios())
-    return redirect("/control")
+        robotsMap[physical_id] = robot
 
 @app.route("/")
 def index():
-    # Run setupThymios in an event loop
-    return render_template('index.html')
+    return render_template('control.html')
 
-@app.route("/thymio-form")
+@app.route("/moveThymio")
 def thymioForm():
     physical_id_thymio = request.args.get('id')
     left_motor = request.args.get('l')
     right_motor = request.args.get('r')
     print(f"ID: {robotsMap.get(physical_id_thymio)},  L: {left_motor}, R: {right_motor}")
     moveThymio(robotsMap.get(physical_id_thymio), int(left_motor), int(right_motor))
-    
-    return redirect("/control")
+    return redirect("/")
 
 @app.get('/thymio')
 def getThymioParams():
@@ -81,19 +53,13 @@ def getThymioParams():
             right_motor = command_data.get("r")
             
             print(f"ID: {physical_id_thymio},  L: {left_motor}, R: {right_motor}")
-
-            print(robotsMap.get(physical_id_thymio))
             moveThymio(robotsMap.get(physical_id_thymio) , left_motor, right_motor)
-            
             return jsonify({"status": "ok", "message": "Data received", "ID": physical_id_thymio, "L": left_motor, "R": right_motor})
         
         except json.JSONDecodeError:
             return jsonify({"status": "error", "message": "Invalid JSON format"}), 400
 
-def moveThymio(id, left, right):
-    global robots
-    robot = robots[id]
-    print(robot)
+def moveThymio(robot, left, right):
     aw(robot.lock())
     v = {
         "motor.left.target": [int(left)],
@@ -104,6 +70,7 @@ def moveThymio(id, left, right):
 
 
 if __name__ == '__main__':
+    asyncio.run(setupThymios())
     app.run(port=52000)
 
     

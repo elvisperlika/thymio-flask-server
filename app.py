@@ -11,22 +11,29 @@ client = ClientAsync()
 # make variable robot global
 robots_json = ''
 robots = []
+robotsMap = {}
+
+# create a map of the robots physical id and the id of the robot
 
 async def setupThymios():
     await notebook.start()
     global robots
     robots = await notebook.get_nodes()
 
-    global robots_json
-    robots_json = [{"id": i, "robot_id": str(robot).replace("Node ", "")} for i, robot in enumerate(robots)]
-    with open('robots_info.json', 'w') as f:
-        json.dump(robots_json, f)
-        
+    # global robots_json
+    # robots_json = [{"physical_id": i, "id": str(robot).replace("Node ", "")} for i, robot in enumerate(robots)]
+    # with open('robots_info.json', 'w') as f:
+    #     json.dump(robots_json, f)
+    
+    global robotsMap
     for i, robot in enumerate(robots):
-        robot_id = str(robot).replace("Node ", "")
-        print(f"Robot {i}: {robot_id}")
+        physical_id = str(robot).replace("Node ", "")
+        print(f"Robot {i}: {physical_id}")
+        robotsMap[physical_id] = i
+    print(robotsMap.keys())
+    print(robotsMap.values())
 
-    print(robots)
+
 
 @app.route("/control")
 def control():
@@ -45,11 +52,11 @@ def index():
 
 @app.route("/thymio-form")
 def thymioForm():
-    thymio_id = request.args.get('id')
+    physical_id_thymio = request.args.get('id')
     left_motor = request.args.get('l')
     right_motor = request.args.get('r')
-    print(f"ID: {thymio_id},  L: {left_motor}, R: {right_motor}")
-    moveThymio(int(thymio_id), int(left_motor), int(right_motor))
+    print(f"ID: {robotsMap.get(physical_id_thymio)},  L: {left_motor}, R: {right_motor}")
+    moveThymio(robotsMap.get(physical_id_thymio), int(left_motor), int(right_motor))
     
     return redirect("/control")
 
@@ -63,20 +70,22 @@ def getThymioParams():
     
     encoded_json = request.args.get('json', default=None)
     if encoded_json:
+        print(f"Encoded JSON: {encoded_json}")
         # decode the URL
         decoded_json = unquote(encoded_json)
         try:
             command_data = json.loads(decoded_json)
             
-            id_thymio = command_data.get("id")
+            physical_id_thymio = command_data.get("id")
             left_motor = command_data.get("l")
             right_motor = command_data.get("r")
             
-            print(f"ID: {id_thymio},  L: {left_motor}, R: {right_motor}")
+            print(f"ID: {physical_id_thymio},  L: {left_motor}, R: {right_motor}")
 
-            moveThymio(id_thymio, left_motor, right_motor)
+            print(robotsMap.get(physical_id_thymio))
+            moveThymio(robotsMap.get(physical_id_thymio) , left_motor, right_motor)
             
-            return jsonify({"status": "ok", "message": "Data received", "ID": id_thymio, "L": left_motor, "R": right_motor})
+            return jsonify({"status": "ok", "message": "Data received", "ID": physical_id_thymio, "L": left_motor, "R": right_motor})
         
         except json.JSONDecodeError:
             return jsonify({"status": "error", "message": "Invalid JSON format"}), 400
@@ -87,8 +96,8 @@ def moveThymio(id, left, right):
     print(robot)
     aw(robot.lock())
     v = {
-        "motor.left.target": [left],
-        "motor.right.target": [right],
+        "motor.left.target": [int(left)],
+        "motor.right.target": [int(right)],
     }
     aw(robot.set_variables(v))
     aw(robot.unlock())

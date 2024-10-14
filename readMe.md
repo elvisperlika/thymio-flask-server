@@ -24,9 +24,9 @@ It's relvent to use ```ipython``` because the ```tdmclient.notebook``` work onl
 
 ## Send command manually
 
-Paste a string like this after the root:
+Paste a string like this after the root, the is must be the robot's physical id:
 ```
-/thymio?json={"id":1,"l":-50,"r":+50}
+/thymio?json={"id":"44cdb758-cffc-42f3-ad5e-02262a80fcfc","l":-50,"r":+50}
 ```
 or use it as API from your application.
 

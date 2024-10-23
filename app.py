@@ -23,6 +23,12 @@ async def setupThymios():
 def index():
     return render_template('control.html')
 
+@app.route("/stopThymios")
+def stopThymioForm():
+    for physical_id_thymio in robotsMap.keys():
+        moveThymio(robotsMap.get(physical_id_thymio), 0, 0)
+    return redirect("/")
+
 @app.route("/moveThymio")
 def thymioForm():
     physical_id_thymio = request.args.get('id')
@@ -42,7 +48,6 @@ def getThymioParams():
     
     encoded_json = request.args.get('json', default=None)
     if encoded_json:
-        print(f"Encoded JSON: {encoded_json}")
         # decode the URL
         decoded_json = unquote(encoded_json)
         try:
